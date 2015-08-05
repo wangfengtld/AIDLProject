@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/wangfeng/Documents/workspace/java/AIDLTest/app/src/main/aidl/com/example/wangfeng/aidltest/IRemoteService.aidl
+ * Original file: /Users/wangfeng/Documents/workspace/java/AIDLProject/AIDLTest/app/src/main/aidl/com/example/wangfeng/aidltest/IRemoteService.aidl
  */
 package com.example.wangfeng.aidltest;
 // Declare any non-default types here with import statements
@@ -42,6 +42,24 @@ switch (code)
 case INTERFACE_TRANSACTION:
 {
 reply.writeString(DESCRIPTOR);
+return true;
+}
+case TRANSACTION_registerParticipateCallback:
+{
+data.enforceInterface(DESCRIPTOR);
+com.example.wangfeng.aidltest.IParticipateCallback _arg0;
+_arg0 = com.example.wangfeng.aidltest.IParticipateCallback.Stub.asInterface(data.readStrongBinder());
+this.registerParticipateCallback(_arg0);
+reply.writeNoException();
+return true;
+}
+case TRANSACTION_unregisterParticipateCallback:
+{
+data.enforceInterface(DESCRIPTOR);
+com.example.wangfeng.aidltest.IParticipateCallback _arg0;
+_arg0 = com.example.wangfeng.aidltest.IParticipateCallback.Stub.asInterface(data.readStrongBinder());
+this.unregisterParticipateCallback(_arg0);
+reply.writeNoException();
 return true;
 }
 case TRANSACTION_join:
@@ -89,6 +107,36 @@ return mRemote;
 public String getInterfaceDescriptor()
 {
 return DESCRIPTOR;
+}
+@Override public void registerParticipateCallback(com.example.wangfeng.aidltest.IParticipateCallback cb) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeStrongBinder((((cb!=null))?(cb.asBinder()):(null)));
+mRemote.transact(Stub.TRANSACTION_registerParticipateCallback, _data, _reply, 0);
+_reply.readException();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+}
+@Override public void unregisterParticipateCallback(com.example.wangfeng.aidltest.IParticipateCallback cb) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeStrongBinder((((cb!=null))?(cb.asBinder()):(null)));
+mRemote.transact(Stub.TRANSACTION_unregisterParticipateCallback, _data, _reply, 0);
+_reply.readException();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
 }
 @Override public void join(android.os.IBinder token, String name) throws android.os.RemoteException
 {
@@ -139,10 +187,14 @@ _data.recycle();
 return _result;
 }
 }
-static final int TRANSACTION_join = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
-static final int TRANSACTION_leave = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
-static final int TRANSACTION_getParticipators = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
+static final int TRANSACTION_registerParticipateCallback = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
+static final int TRANSACTION_unregisterParticipateCallback = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
+static final int TRANSACTION_join = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
+static final int TRANSACTION_leave = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
+static final int TRANSACTION_getParticipators = (android.os.IBinder.FIRST_CALL_TRANSACTION + 4);
 }
+public void registerParticipateCallback(com.example.wangfeng.aidltest.IParticipateCallback cb) throws android.os.RemoteException;
+public void unregisterParticipateCallback(com.example.wangfeng.aidltest.IParticipateCallback cb) throws android.os.RemoteException;
 public void join(android.os.IBinder token, String name) throws android.os.RemoteException;
 public void leave(android.os.IBinder token) throws android.os.RemoteException;
 public java.util.List<String> getParticipators() throws android.os.RemoteException;

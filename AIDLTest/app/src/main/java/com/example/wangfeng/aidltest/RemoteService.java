@@ -3,6 +3,7 @@ package com.example.wangfeng.aidltest;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -15,7 +16,67 @@ import java.util.List;
 public class RemoteService extends Service {
 
 
-  private List<Client> mClients = new ArrayList<>();
+  private RemoteCallbackList<IParticipateCallback> mCallbacks = new RemoteCallbackList<>();
+  private List<Client>                             mClients   = new ArrayList<>();
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+  }
+
+  @Override
+  public IBinder onBind(Intent intent) {
+    // Return the interface
+    Log.d("message", "onBind " + intent.getAction());
+    return mBinder;
+  }
+
+
+  private final IRemoteService.Stub mBinder = new IRemoteService.Stub() {
+    @Override
+    public void registerParticipateCallback(IParticipateCallback cb) throws RemoteException {
+      mCallbacks.register(cb);
+    }
+
+    @Override
+    public void unregisterParticipateCallback(IParticipateCallback cb) throws RemoteException {
+      mCallbacks.unregister(cb);
+    }
+
+    @Override
+    public void join(IBinder token, String name) throws RemoteException {
+      // 通知client加入
+      int idx = findClient(token);
+      if (idx >= 0) {
+        Log.d("message", "already joined");
+        return;
+      }
+      Log.d("message", name + "joined" + token.toString());
+      Client client = new Client(token, name);
+
+      notifyParticipate(client.mName, true);
+      mClients.add(client);
+    }
+
+    @Override
+    public void leave(IBinder token) throws RemoteException {
+      // 通知client离开
+      int idx = findClient(token);
+      if (idx < 0) {
+        Log.d("message", "already left");
+        return;
+      }
+      Log.d("message", token.toString() + "left");
+      Client client = mClients.get(idx);
+      notifyParticipate(client.mName, false);
+      mClients.remove(client);
+    }
+
+    @Override
+    public List<String> getParticipators() throws RemoteException {
+      return null;
+    }
+  };
 
   // 通过IBinder查找Client
   private int findClient(IBinder token) {
@@ -27,56 +88,39 @@ public class RemoteService extends Service {
     return -1;
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
+  private void notifyParticipate(final String name, final boolean joinOrLeave) {
+    final int len = mCallbacks.beginBroadcast();
+    for (int i = 0; i < len; i++) {
+      final IParticipateCallback iParticipateCallback = mCallbacks.getBroadcastItem(i);
+        // 通知回调
+        new Thread(new Runnable() {
+          @Override
+          public void run() {
+
+            try {
+              Thread.sleep(1000);
+              iParticipateCallback.onParticipate(name, joinOrLeave);
+            } catch (RemoteException e) {
+              e.printStackTrace();
+            } catch (InterruptedException e) {
+              e.printStackTrace();
+            }
+          }
+        }).start();
+    }
+    mCallbacks.finishBroadcast();
   }
 
   @Override
-  public IBinder onBind(Intent intent) {
-    // Return the interface
-    Log.d("message", "onBind" + intent.getAction());
-    return mBinder;
+  public void onDestroy() {
+    super.onDestroy();
+    // 取消掉所有的回调
+    mCallbacks.kill();
+    mClients = null;
+    Log.d("message", "service destroy!");
   }
 
-
-  private final IRemoteService.Stub mBinder = new IRemoteService.Stub() {
-    @Override
-    public void join(IBinder token, String name) throws RemoteException {
-      int idx = findClient(token);
-      if (idx >= 0) {
-        Log.d("message", "already joined");
-        return;
-      }
-      Log.d("message", name + "joined" + token.toString());
-      Client client = new Client(token, name);
-      // 注册客户端死掉的通知
-      token.linkToDeath(client, 0);
-      mClients.add(client);
-    }
-
-    @Override
-    public void leave(IBinder token) throws RemoteException {
-      int idx = findClient(token);
-      if (idx < 0) {
-        Log.d("message", "already left");
-        return;
-      }
-      Log.d("message", token.toString() + "left");
-      Client client = mClients.get(idx);
-      mClients.remove(client);
-
-      // 取消注册
-      client.mToken.unlinkToDeath(client, 0);
-    }
-
-    @Override
-    public List<String> getParticipators() throws RemoteException {
-      return null;
-    }
-  };
-
-  private final class Client implements IBinder.DeathRecipient {
+  private final class Client {
     public final IBinder mToken;
     public final String  mName;
 
@@ -85,16 +129,12 @@ public class RemoteService extends Service {
       mName = name;
     }
 
-    @Override
-    public void binderDied() {
-      // 客户端死掉，执行此回调
-      int index = mClients.indexOf(this);
-      if (index < 0) {
-        return;
-      }
+    public IBinder getmToken() {
+      return mToken;
+    }
 
-      Log.d("message", "client died: " + mName);
-      mClients.remove(this);
+    public String getmName() {
+      return mName;
     }
   }
 }

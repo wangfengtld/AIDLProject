@@ -6,18 +6,28 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Adapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.wangfeng.aidltest.IParticipateCallback;
 import com.example.wangfeng.aidltest.IRemoteService;
+
+import java.util.logging.Handler;
 
 
 public class MainActivity extends Activity {
 
   private Button bindBtn, unbindBtn, callBtn;
+  private ListView listView;
+  private ArrayAdapter mAdapter;
   private IBinder mToken        = new Binder();
   private boolean isBindService = false;
   private boolean mIsJoin       = false;
@@ -29,6 +39,9 @@ public class MainActivity extends Activity {
     bindBtn = (Button) findViewById(R.id.bind);
     unbindBtn = (Button) findViewById(R.id.unbind);
     callBtn = (Button) findViewById(R.id.calll);
+    listView = (ListView) findViewById(R.id.listview);
+    mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+    listView.setAdapter(mAdapter);
 
     bindBtn.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -43,6 +56,11 @@ public class MainActivity extends Activity {
       public void onClick(View v) {
         if (isBindService) {
           unbindService(mServiceConnection);
+          try {
+            mService.unregisterParticipateCallback(mParticipateCallback);
+          } catch (RemoteException e) {
+            e.printStackTrace();
+          }
           isBindService = false;
         }
       }
@@ -62,6 +80,11 @@ public class MainActivity extends Activity {
     public void onServiceConnected(ComponentName name, IBinder service) {
       Toast.makeText(MainActivity.this, "Service connected" + name, Toast.LENGTH_SHORT).show();
       mService = IRemoteService.Stub.asInterface(service);
+      try {
+        mService.registerParticipateCallback(mParticipateCallback);
+      } catch (RemoteException e) {
+        e.printStackTrace();
+      }
       isBindService = true;
     }
 
@@ -80,11 +103,21 @@ public class MainActivity extends Activity {
       Toast.makeText(this, "Service is not available yet!", Toast.LENGTH_SHORT).show();
       return;
     }
+    if (!isBindService) {
+      Toast.makeText(this, "Service is unbind!", Toast.LENGTH_SHORT).show();
+      return;
+    }
 
     try {
       if (!mIsJoin) {
         String name = "Client:" + 1;
         mService.join(mToken, name);
+        int num = 10;
+        for (int i = 0; i < num; i++) {
+          IBinder iBinder  = new Binder();
+          final String nameClient = "client:" + i;
+          mService.join(iBinder, nameClient);
+        }
         callBtn.setText("leave");
         mIsJoin = true;
       } else {
@@ -96,4 +129,29 @@ public class MainActivity extends Activity {
       e.printStackTrace();
     }
   }
+
+  private IParticipateCallback mParticipateCallback = new IParticipateCallback.Stub() {
+
+    @Override
+    public void onParticipate(String name, boolean joinOrLeave) throws RemoteException {
+      Log.d("message", "onParticipate  " + Thread.currentThread().getName());
+
+      Message message = handler.obtainMessage();
+      message.what = joinOrLeave ? 1 : 0;
+      message.obj = name;
+      handler.sendMessage(message);
+    }
+  };
+
+  private android.os.Handler handler = new android.os.Handler() {
+    @Override
+    public void handleMessage(Message msg) {
+      super.handleMessage(msg);
+      if (msg.what == 1) {
+        mAdapter.add(msg.obj);
+      } else {
+        mAdapter.remove(msg.obj);
+      }
+    }
+  };
 }
