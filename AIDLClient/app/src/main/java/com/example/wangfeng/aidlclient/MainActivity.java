@@ -152,6 +152,7 @@ public class MainActivity extends Activity {
       } else {
         mAdapter.remove(msg.obj);
       }
+      listView.setSelection(mAdapter.getCount() - 1);
     }
   };
 }

@@ -9,6 +9,8 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by wangfeng on 15/8/4.
@@ -16,6 +18,7 @@ import java.util.List;
 public class RemoteService extends Service {
 
 
+  ExecutorService pool = Executors.newSingleThreadExecutor();
   private RemoteCallbackList<IParticipateCallback> mCallbacks = new RemoteCallbackList<>();
   private List<Client>                             mClients   = new ArrayList<>();
 
@@ -93,20 +96,34 @@ public class RemoteService extends Service {
     for (int i = 0; i < len; i++) {
       final IParticipateCallback iParticipateCallback = mCallbacks.getBroadcastItem(i);
         // 通知回调
-        new Thread(new Runnable() {
-          @Override
-          public void run() {
+//        new Thread(new Runnable() {
+//          @Override
+//          public void run() {
+//
+//            try {
+//              Thread.sleep(1000);
+//              iParticipateCallback.onParticipate(name, joinOrLeave);
+//            } catch (RemoteException e) {
+//              e.printStackTrace();
+//            } catch (InterruptedException e) {
+//              e.printStackTrace();
+//            }
+//          }
+//        }).start();
+      pool.execute(new Thread(new Runnable() {
+        @Override
+        public void run() {
 
-            try {
-              Thread.sleep(1000);
-              iParticipateCallback.onParticipate(name, joinOrLeave);
-            } catch (RemoteException e) {
-              e.printStackTrace();
-            } catch (InterruptedException e) {
-              e.printStackTrace();
-            }
+          try {
+            Thread.sleep(1000);
+            iParticipateCallback.onParticipate(name, joinOrLeave);
+          } catch (RemoteException e) {
+            e.printStackTrace();
+          } catch (InterruptedException e) {
+            e.printStackTrace();
           }
-        }).start();
+        }
+      }));
     }
     mCallbacks.finishBroadcast();
   }
