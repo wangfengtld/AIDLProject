@@ -11,7 +11,6 @@ import android.os.RemoteException;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -19,8 +18,7 @@ import android.widget.Toast;
 
 import com.example.wangfeng.aidltest.IParticipateCallback;
 import com.example.wangfeng.aidltest.IRemoteService;
-
-import java.util.logging.Handler;
+import com.example.wangfeng.aidltest.Product;
 
 
 public class MainActivity extends Activity {
@@ -114,7 +112,7 @@ public class MainActivity extends Activity {
         mService.join(mToken, name);
         int num = 10;
         for (int i = 0; i < num; i++) {
-          IBinder iBinder  = new Binder();
+          IBinder iBinder = new Binder();
           final String nameClient = "client:" + i;
           mService.join(iBinder, nameClient);
         }
@@ -133,12 +131,12 @@ public class MainActivity extends Activity {
   private IParticipateCallback mParticipateCallback = new IParticipateCallback.Stub() {
 
     @Override
-    public void onParticipate(String name, boolean joinOrLeave) throws RemoteException {
+    public void onParticipate(Product product, boolean joinOrLeave) throws RemoteException {
       Log.d("message", "onParticipate  " + Thread.currentThread().getName());
 
       Message message = handler.obtainMessage();
       message.what = joinOrLeave ? 1 : 0;
-      message.obj = name;
+      message.obj = product.getName();
       handler.sendMessage(message);
     }
   };

@@ -3,8 +3,6 @@
  * Original file: /Users/wangfeng/Documents/workspace/java/AIDLProject/AIDLTest/app/src/main/aidl/com/example/wangfeng/aidltest/IParticipateCallback.aidl
  */
 package com.example.wangfeng.aidltest;
-// Declare any non-default types here with import statements
-
 public interface IParticipateCallback extends android.os.IInterface
 {
 /** Local-side IPC implementation stub class. */
@@ -47,12 +45,24 @@ return true;
 case TRANSACTION_onParticipate:
 {
 data.enforceInterface(DESCRIPTOR);
-String _arg0;
-_arg0 = data.readString();
+com.example.wangfeng.aidltest.Product _arg0;
+if ((0!=data.readInt())) {
+_arg0 = com.example.wangfeng.aidltest.Product.CREATOR.createFromParcel(data);
+}
+else {
+_arg0 = null;
+}
 boolean _arg1;
 _arg1 = (0!=data.readInt());
 this.onParticipate(_arg0, _arg1);
 reply.writeNoException();
+if ((_arg0!=null)) {
+reply.writeInt(1);
+_arg0.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+}
+else {
+reply.writeInt(0);
+}
 return true;
 }
 }
@@ -75,16 +85,25 @@ return DESCRIPTOR;
 }
 // 用户加入或者离开的回调
 
-@Override public void onParticipate(String name, boolean joinOrLeave) throws android.os.RemoteException
+@Override public void onParticipate(com.example.wangfeng.aidltest.Product product, boolean joinOrLeave) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
 try {
 _data.writeInterfaceToken(DESCRIPTOR);
-_data.writeString(name);
+if ((product!=null)) {
+_data.writeInt(1);
+product.writeToParcel(_data, 0);
+}
+else {
+_data.writeInt(0);
+}
 _data.writeInt(((joinOrLeave)?(1):(0)));
 mRemote.transact(Stub.TRANSACTION_onParticipate, _data, _reply, 0);
 _reply.readException();
+if ((0!=_reply.readInt())) {
+product.readFromParcel(_reply);
+}
 }
 finally {
 _reply.recycle();
@@ -96,5 +115,5 @@ static final int TRANSACTION_onParticipate = (android.os.IBinder.FIRST_CALL_TRAN
 }
 // 用户加入或者离开的回调
 
-public void onParticipate(String name, boolean joinOrLeave) throws android.os.RemoteException;
+public void onParticipate(com.example.wangfeng.aidltest.Product product, boolean joinOrLeave) throws android.os.RemoteException;
 }

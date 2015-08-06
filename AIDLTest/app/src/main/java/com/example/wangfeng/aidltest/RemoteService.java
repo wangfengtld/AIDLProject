@@ -56,8 +56,12 @@ public class RemoteService extends Service {
       }
       Log.d("message", name + "joined" + token.toString());
       Client client = new Client(token, name);
+      Product product = new Product();
+      product.setName(client.getmName());
+      product.setId(2);
+      product.setDesc(client.getmName());
 
-      notifyParticipate(client.mName, true);
+      notifyParticipate(product, true);
       mClients.add(client);
     }
 
@@ -71,7 +75,12 @@ public class RemoteService extends Service {
       }
       Log.d("message", token.toString() + "left");
       Client client = mClients.get(idx);
-      notifyParticipate(client.mName, false);
+      Product product = new Product();
+      product.setName(client.getmName());
+      product.setId(2);
+      product.setDesc(client.getmName());
+
+      notifyParticipate(product, false);
       mClients.remove(client);
     }
 
@@ -91,11 +100,11 @@ public class RemoteService extends Service {
     return -1;
   }
 
-  private void notifyParticipate(final String name, final boolean joinOrLeave) {
+  private void notifyParticipate(final Product product, final boolean joinOrLeave) {
     final int len = mCallbacks.beginBroadcast();
     for (int i = 0; i < len; i++) {
       final IParticipateCallback iParticipateCallback = mCallbacks.getBroadcastItem(i);
-        // 通知回调
+      // 通知回调
 //        new Thread(new Runnable() {
 //          @Override
 //          public void run() {
@@ -116,7 +125,7 @@ public class RemoteService extends Service {
 
           try {
             Thread.sleep(1000);
-            iParticipateCallback.onParticipate(name, joinOrLeave);
+            iParticipateCallback.onParticipate(product, joinOrLeave);
           } catch (RemoteException e) {
             e.printStackTrace();
           } catch (InterruptedException e) {
