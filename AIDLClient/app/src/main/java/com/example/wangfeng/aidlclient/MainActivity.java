@@ -115,11 +115,13 @@ public class MainActivity extends Activity {
           IBinder iBinder = new Binder();
           final String nameClient = "client:" + i;
           mService.join(iBinder, nameClient);
+          Log.d("message", "当前加入人数：" + mService.getParticipators().size());
         }
         callBtn.setText("leave");
         mIsJoin = true;
       } else {
         mService.leave(mToken);
+        Log.d("message", "当前加入人数：" + mService.getParticipators().size());
         callBtn.setText("join");
         mIsJoin = false;
       }

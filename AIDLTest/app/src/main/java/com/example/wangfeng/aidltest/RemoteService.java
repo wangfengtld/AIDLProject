@@ -86,7 +86,11 @@ public class RemoteService extends Service {
 
     @Override
     public List<String> getParticipators() throws RemoteException {
-      return null;
+      List<String> list = new ArrayList<>();
+      for (Client mClient : mClients) {
+        list.add(mClient.getmName());
+      }
+      return list;
     }
   };
 
@@ -141,6 +145,7 @@ public class RemoteService extends Service {
   public void onDestroy() {
     super.onDestroy();
     // 取消掉所有的回调
+    pool.shutdownNow();
     mCallbacks.kill();
     mClients = null;
     Log.d("message", "service destroy!");
