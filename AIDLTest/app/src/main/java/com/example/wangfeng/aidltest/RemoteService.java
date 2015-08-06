@@ -9,8 +9,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by wangfeng on 15/8/4.
@@ -18,7 +16,7 @@ import java.util.concurrent.Executors;
 public class RemoteService extends Service {
 
 
-  ExecutorService pool = Executors.newSingleThreadExecutor();
+  MySingleThreadExecutor pool = new MySingleThreadExecutor();
   private RemoteCallbackList<IParticipateCallback> mCallbacks = new RemoteCallbackList<>();
   private List<Client>                             mClients   = new ArrayList<>();
 
@@ -38,12 +36,16 @@ public class RemoteService extends Service {
   private final IRemoteService.Stub mBinder = new IRemoteService.Stub() {
     @Override
     public void registerParticipateCallback(IParticipateCallback cb) throws RemoteException {
+      Log.d("message", cb.toString() + "客户端注册进入");
       mCallbacks.register(cb);
+      Log.d("message", "共有 " + mCallbacks.getRegisteredCallbackCount() + " 个客户端");
     }
 
     @Override
     public void unregisterParticipateCallback(IParticipateCallback cb) throws RemoteException {
+      Log.d("message", cb.toString() + "退出");
       mCallbacks.unregister(cb);
+      Log.d("message", "移除后共有 " + mCallbacks.getRegisteredCallbackCount() + " 个客户端");
     }
 
     @Override
@@ -123,7 +125,7 @@ public class RemoteService extends Service {
 //            }
 //          }
 //        }).start();
-      pool.execute(new Thread(new Runnable() {
+      pool.execute(new Runnable() {
         @Override
         public void run() {
 
@@ -136,7 +138,7 @@ public class RemoteService extends Service {
             e.printStackTrace();
           }
         }
-      }));
+      });
     }
     mCallbacks.finishBroadcast();
   }

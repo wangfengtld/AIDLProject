@@ -155,4 +155,16 @@ public class MainActivity extends Activity {
       listView.setSelection(mAdapter.getCount() - 1);
     }
   };
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    try {
+      mService.unregisterParticipateCallback(mParticipateCallback);
+    } catch (RemoteException e) {
+      e.printStackTrace();
+    }
+    unbindService(mServiceConnection);
+    mService = null;
+  }
 }
